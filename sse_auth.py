@@ -1,37 +1,60 @@
-"""SSE transport with optional Bearer token authentication."""
+"""SSE and WebSocket transport with optional Bearer token authentication."""
 
 import secrets
 
 import uvicorn
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
-from starlette.routing import Mount, Route
+from starlette.routing import Mount, Route, WebSocketRoute
+
+from ws_gateway import handle_ws_gateway
 
 
-class BearerTokenMiddleware(BaseHTTPMiddleware):
+def verify_bearer(headers: list[tuple[bytes, bytes]], token: str) -> bool:
+    auth_header = ""
+    for key, value in headers:
+        if key.lower() == b"authorization":
+            auth_header = value.decode()
+            break
+
+    if not auth_header.startswith("Bearer "):
+        return False
+
+    provided_token = auth_header[7:]
+    return secrets.compare_digest(provided_token, token)
+
+
+class BearerTokenMiddleware:
+    """Pure ASGI middleware supporting both HTTP and WebSocket."""
+
     def __init__(self, app, token: str):
-        super().__init__(app)
+        self.app = app
         self._token = token
 
-    async def dispatch(self, request, call_next):
-        if request.url.path == "/health":
-            return await call_next(request)
+    async def __call__(self, scope, receive, send):
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
 
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
-            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+        path = scope.get("path", "")
+        if path == "/health":
+            await self.app(scope, receive, send)
+            return
 
-        provided_token = auth_header[7:]
-        if not secrets.compare_digest(provided_token, self._token):
-            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+        if not verify_bearer(scope.get("headers", []), self._token):
+            if scope["type"] == "http":
+                response = JSONResponse({"detail": "Unauthorized"}, status_code=401)
+                await response(scope, receive, send)
+            else:
+                await send({"type": "websocket.close", "code": 4401})
+            return
 
-        return await call_next(request)
+        await self.app(scope, receive, send)
 
 
 async def run_sse_async(mcp, token: str | None = None) -> None:
-    """Run the MCP server over SSE, optionally requiring a Bearer token."""
+    """Run the MCP server over SSE and WebSocket, optionally requiring a Bearer token."""
     sse = SseServerTransport("/messages/")
 
     async def handle_sse(request):
@@ -54,11 +77,12 @@ async def run_sse_async(mcp, token: str | None = None) -> None:
             Route("/health", endpoint=health),
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
+            WebSocketRoute("/ws/", endpoint=handle_ws_gateway),
         ],
     )
 
     if token:
-        starlette_app.add_middleware(BearerTokenMiddleware, token=token)
+        starlette_app = BearerTokenMiddleware(starlette_app, token=token)
 
     config = uvicorn.Config(
         starlette_app,

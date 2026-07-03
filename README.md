@@ -16,6 +16,7 @@ A server implementation for [Upbit](https://upbit.com) Cryptocurrency Exchange O
 |------|------|
 | [MCP 도구 소개](docs/mcp-tools.md) | Tool, Resource, Prompt 목록 및 설명 |
 | [Upbit SDK ↔ MCP 구현 현황](docs/upbit-sdk-mcp-coverage.md) | SDK 대비 MCP 커버리지 체크리스트 |
+| [WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md) | `/ws/` 연결, 구독 예시, public/private 라우팅 |
 
 <details>
   <summary><strong>채팅 예시</strong></summary>
@@ -57,7 +58,7 @@ UPBIT_MCP_SSE_TOKEN=your_sse_bearer_token_here
 |------|------|------|
 | `UPBIT_ACCESS_KEY` | 선택 | 업비트 Access Key (계정·주문·입출금 API) |
 | `UPBIT_SECRET_KEY` | 선택 | 업비트 Secret Key |
-| `UPBIT_MCP_SSE_TOKEN` | 권장 | SSE 엔드포인트 Bearer 인증 토큰. 미설정 시 `/sse`, `/messages`가 보호되지 않습니다. |
+| `UPBIT_MCP_SSE_TOKEN` | 권장 | SSE/WebSocket 엔드포인트 Bearer 인증 토큰. 미설정 시 `/sse`, `/messages`, `/ws/`가 보호되지 않습니다. |
 
 ### 2. Docker 이미지 실행
 
@@ -113,6 +114,10 @@ SSE transport를 지원하는 MCP 클라이언트에서 아래와 같이 설정�
 ```
 
 `UPBIT_MCP_SSE_TOKEN`을 설정하지 않은 경우 `headers` 항목은 생략할 수 있습니다.
+
+### 4. WebSocket 게이트웨이 (`/ws/`)
+
+단일 `/ws/` 엔드포인트에서 업비트 public 시세(`ticker`, `trade`, `orderbook`, `candle.*`)와 private 계정 스트림(`myOrder`, `myAsset`)을 모두 사용할 수 있습니다. 연결 방법, 구독 예시, 혼합 구독, 에러 처리 등은 **[WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md)**에서 확인하세요.
 
 ## Caution
 

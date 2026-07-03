@@ -113,9 +113,13 @@ if __name__ == "__main__":
         mcp.settings.port = args.port
 
         if UPBIT_MCP_SSE_TOKEN:
-            print("🔒 SSE Bearer 토큰 인증이 활성화되었습니다.")
+            print("🔒 SSE/WebSocket Bearer 토큰 인증이 활성화되었습니다.")
         else:
-            print("⚠️  경고: UPBIT_MCP_SSE_TOKEN이 설정되지 않았습니다. SSE 엔드포인트가 보호되지 않습니다.")
+            print("⚠️  경고: UPBIT_MCP_SSE_TOKEN이 설정되지 않았습니다. SSE/WebSocket 엔드포인트가 보호되지 않습니다.")
+
+        print(f"📡 WebSocket gateway (public + private): ws://{args.host}:{args.port}/ws/")
+        if not UPBIT_ACCESS_KEY:
+            print("⚠️  경고: API 키가 없어 /ws/ private 스트림(myOrder, myAsset)을 사용할 수 없습니다.")
 
         asyncio.run(run_sse_async(mcp, token=UPBIT_MCP_SSE_TOKEN))
     else:
