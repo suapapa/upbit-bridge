@@ -1,15 +1,15 @@
-# WebSocket 게이트웨이 (`/ws/`) 사용 가이드
+# WebSocket 게이트웨이(`/ws/`) 사용 가이드
 
-Upbit Bridge의 `/ws/` 엔드포인트는 업비트 WebSocket API를 **하나의 연결**로 사용할 수 있게 해 주는 스마트 게이트웨이입니다.
+Upbit Bridge의 `/ws/` 엔드포인트는 업비트 WebSocket API를 **단 하나의 연결**로 편리하게 이용하도록 돕는 스마트 게이트웨이입니다.
 
-클라이언트는 업비트 WebSocket 프로토콜을 그대로 따르면 됩니다. 서버가 구독 메시지를 읽어 **public** 스트림과 **private** 스트림을 자동으로 나눠 각각의 upstream에 전달합니다.
+클라이언트는 업비트가 제공하는 기존 WebSocket 프로토콜 명세를 그대로 따르면 됩니다. 게이트웨이 서버가 클라이언트의 구독 메시지를 분석하여 **공개(public)** 스트림과 **비공개(private)** 스트림으로 자동 분류한 뒤, 각각의 업스트림(upstream) 서버로 안전하게 전달합니다.
 
-| 구분 | 스트림 타입 | 업비트 upstream | API 키 |
+| 구분 | 스트림 유형 | 업비트 업스트림 주소 | API 키 |
 |------|-------------|-----------------|--------|
-| Public | `ticker`, `trade`, `orderbook`, `candle.*` | `wss://api.upbit.com/websocket/v1` | 불필요 |
-| Private | `myOrder`, `myAsset` | `wss://api.upbit.com/websocket/v1/private` | 컨테이너에 설정된 키 사용 |
+| 공개 (Public) | `ticker`, `trade`, `orderbook`, `candle.*` | `wss://api.upbit.com/websocket/v1` | 불필요 |
+| 비공개 (Private) | `myOrder`, `myAsset` | `wss://api.upbit.com/websocket/v1/private` | 컨테이너에 등록된 API 키 사용 |
 
-Private 스트림의 JWT 인증은 **서버가 대신 처리**합니다. 클라이언트가 업비트 Access Key를 직접 넘길 필요는 없습니다.
+비공개 스트림에 필요한 JWT 인증 절차는 **게이트웨이 서버가 대신 처리**합니다. 따라서 클라이언트가 업비트 Access Key를 직접 전송할 필요가 없어 보안상 매우 안전합니다.
 
 ---
 
@@ -17,7 +17,7 @@ Private 스트림의 JWT 인증은 **서버가 대신 처리**합니다. 클라�
 
 ### 1. 서버 실행
 
-Docker로 SSE transport 모드로 기동합니다 (기본 포트 `8000`).
+Docker를 사용하여 SSE 전송 모드로 구동합니다. (기본 포트는 `8000`입니다)
 
 ```bash
 docker run -d \
@@ -27,29 +27,29 @@ docker run -d \
   ghcr.io/suapapa/upbit-bridge:latest
 ```
 
-로컬에서 직접 실행할 경우:
+로컬 환경에서 직접 실행할 때는 아래 명령어를 입력합니다.
 
 ```bash
 python main.py --transport sse
 ```
 
-### 2. 환경 변수
+### 2. 환경 변수 설정
 
-| 변수 | Public 스트림 | Private 스트림 | 설명 |
+| 변수명 | 공개 스트림 | 비공개 스트림 | 설명 |
 |------|:-------------:|:--------------:|------|
-| `UPBIT_MCP_SSE_TOKEN` | 권장 | 권장 | `/ws/` 접속 시 Bearer 토큰. 미설정 시 엔드포인트가 보호되지 않습니다. |
-| `UPBIT_ACCESS_KEY` | — | **필수** | Private 스트림용 |
-| `UPBIT_SECRET_KEY` | — | **필수** | Private 스트림용 |
+| `UPBIT_BRIDGE_AUTH_TOKEN` | 권장 | 권장 | `/ws/` 경로 접속 시 사용할 Bearer 토큰입니다. 설정하지 않으면 엔드포인트가 보호되지 않습니다. |
+| `UPBIT_ACCESS_KEY` | — | **필수** | 비공개 스트림 연결용 Access Key |
+| `UPBIT_SECRET_KEY` | — | **필수** | 비공개 스트림 연결용 Secret Key |
 
-### 3. 연결 URL
+### 3. 연결 주소(URL)
 
 ```
 ws://localhost:8000/ws/
 ```
 
-프로덕션에서는 `wss://`와 실제 호스트를 사용합니다.
+실제 서비스 배포 환경(프로덕션)에서는 안전한 `wss://` 프로토콜과 도메인 호스트 주소를 활용해 주세요.
 
-`UPBIT_MCP_SSE_TOKEN`이 설정된 경우, WebSocket handshake 시 헤더에 Bearer 토큰을 포함합니다.
+`UPBIT_BRIDGE_AUTH_TOKEN`이 활성화되어 있다면, WebSocket 연결 요청(Handshake) 시 아래와 같이 헤더에 Bearer 토큰을 담아서 보냅니다.
 
 ```
 Authorization: Bearer your_sse_bearer_token_here
@@ -57,50 +57,50 @@ Authorization: Bearer your_sse_bearer_token_here
 
 ---
 
-## 메시지 형식
+## 메시지 규격
 
-업비트 WebSocket과 동일하게, **JSON 배열**을 텍스트로 전송합니다.
+업비트 공식 WebSocket 규격과 마찬가지로, **JSON 배열** 형태의 텍스트 메시지를 보냅니다.
 
 ```json
 [
-  {"ticket": "요청을 구분하는 고유 ID (UUID 권장)"},
-  {"type": "스트림 종류", "codes": ["KRW-BTC"]},
+  {"ticket": "요청을 구분하기 위한 고유 ID (UUID 권장)"},
+  {"type": "스트림 유형", "codes": ["KRW-BTC"]},
   {"format": "DEFAULT"}
 ]
 ```
 
-| 필드 | 필수 | 설명 |
+| 필드명 | 필수 여부 | 설명 |
 |------|------|------|
-| `ticket` | 권장 | 요청 식별자. UUID를 쓰면 충돌을 피하기 쉽습니다. |
-| `type` | ✅ | 구독할 스트림 종류 (아래 표 참고) |
-| `codes` | 타입별 상이 | 마켓 코드 목록. `myAsset`에는 사용하지 않습니다. |
-| `format` | 선택 | `DEFAULT`, `SIMPLE`, `JSON_LIST`, `SIMPLE_LIST` |
+| `ticket` | 권장 | 요청 식별자입니다. UUID를 지정하면 충돌을 효과적으로 방지할 수 있습니다. |
+| `type` | ✅ | 구독하려는 스트림의 종류 (아래 표 참고) |
+| `codes` | 유형별 상이 | 마켓 코드 목록입니다. `myAsset` 유형에는 기입하지 않습니다. |
+| `format` | 선택 | 데이터 포맷 지정 (`DEFAULT`, `SIMPLE`, `JSON_LIST`, `SIMPLE_LIST`) |
 
-### 지원하는 스트림 타입
+### 지원하는 스트림 종류
 
-**Public** (시장 전체 데이터)
+**공개 스트림 (시장 전체 공통 데이터)**
 
-| `type` | 설명 |
+| `type` 값 | 설명 |
 |--------|------|
-| `ticker` | 현재가 |
-| `trade` | 실시간 체결 |
-| `orderbook` | 호가 |
-| `candle.1s`, `candle.1m`, `candle.5m` … | 실시간 캔들 (`candle.{간격}`) |
+| `ticker` | 현재가 정보 |
+| `trade` | 실시간 체결 내역 |
+| `orderbook` | 호가창 스냅샷 |
+| `candle.1s`, `candle.1m`, `candle.5m` … | 실시간 캔들 데이터 (`candle.{간격}`) |
 
-**Private** (내 계정 데이터)
+**비공개 스트림 (사용자 개인 계정 데이터)**
 
-| `type` | 설명 |
+| `type` 값 | 설명 |
 |--------|------|
-| `myOrder` | 내 주문 상태 변화 (체결, 취소 등) |
-| `myAsset` | 내 잔고 변화 |
+| `myOrder` | 내 주문 상태 변화 알림 (체결, 취소 등) |
+| `myAsset` | 내 잔고 변동 알림 |
 
 ---
 
-## 사용 예시
+## 활용 예시 (Python)
 
-### Python — 현재가 구독 (Public)
+### 1. 현재가 구독하기 (공개 스트림)
 
-API 키 없이도 동작합니다.
+API 키 설정 없이도 원활히 작동합니다.
 
 ```python
 import asyncio
@@ -126,7 +126,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### Python — 실시간 체결 구독 (Public)
+### 2. 실시간 체결 내역 구독하기 (공개 스트림)
 
 ```python
 await ws.send(json.dumps([
@@ -136,7 +136,7 @@ await ws.send(json.dumps([
 ]))
 ```
 
-### Python — 호가 구독 (Public)
+### 3. 호가 정보 구독하기 (공개 스트림)
 
 ```python
 await ws.send(json.dumps([
@@ -146,9 +146,9 @@ await ws.send(json.dumps([
 ]))
 ```
 
-### Python — 내 주문 구독 (Private)
+### 4. 내 주문 정보 구독하기 (비공개 스트림)
 
-컨테이너에 `UPBIT_ACCESS_KEY` / `UPBIT_SECRET_KEY`가 설정되어 있어야 합니다.
+게이트웨이 서버 컨테이너에 `UPBIT_ACCESS_KEY`와 `UPBIT_SECRET_KEY`가 올바르게 설정되어 있어야 합니다.
 
 ```python
 await ws.send(json.dumps([
@@ -158,7 +158,7 @@ await ws.send(json.dumps([
 ]))
 ```
 
-`codes`를 생략하거나 빈 배열로내면 전체 마켓의 내 주문을 받을 수 있습니다 (업비트 API 동작과 동일).
+`codes` 필드를 아예 생략하거나 빈 배열로 보내면, 업비트 API 본래 스펙에 따라 마켓 구분 없이 내 모든 주문 현황을 실시간으로 수신합니다.
 
 ```python
 await ws.send(json.dumps([
@@ -168,9 +168,9 @@ await ws.send(json.dumps([
 ]))
 ```
 
-### Python — 내 잔고 구독 (Private)
+### 5. 내 보유 자산 구독하기 (비공개 스트림)
 
-`myAsset`은 마켓 코드(`codes`)를 받지 않습니다.
+`myAsset` 유형은 별도의 마켓 코드(`codes`) 필드가 필요하지 않습니다.
 
 ```python
 await ws.send(json.dumps([
@@ -180,9 +180,9 @@ await ws.send(json.dumps([
 ]))
 ```
 
-### Python — Public + Private 혼합 구독
+### 6. 공개 및 비공개 채널 혼합 구독하기
 
-한 메시지에 public과 private 타입을 함께 넣을 수 있습니다. 서버가 자동으로 분리해 각 upstream에 전달합니다.
+하나의 JSON 구독 메시지에 공개와 비공개 타입을 섞어서 보낼 수 있습니다. 게이트웨이가 수신 즉시 이를 분류해 각 업스트림에 전달합니다.
 
 ```python
 await ws.send(json.dumps([
@@ -193,16 +193,16 @@ await ws.send(json.dumps([
 ]))
 ```
 
-이 경우 서버 내부에서는 다음 두 메시지로 나뉩니다.
+이 메시지를 받으면 서버 내부에서 아래와 같이 두 갈래로 나눕니다.
 
-- Public upstream → `ticker` 구독
-- Private upstream → `myOrder` 구독
+- 공개 업스트림 전송 → `ticker` 채널 구독
+- 비공개 업스트림 전송 → `myOrder` 채널 구독
 
-수신 이벤트는 **하나의 WebSocket 연결**으로 모두 전달됩니다.
+이후 발생하는 모든 실시간 이벤트는 **단 하나의 클라이언트 WebSocket 연결**을 통해 통합 전달됩니다.
 
-### Python — 구독 목록 조회
+### 7. 구독 중인 목록 조회하기
 
-연결이 열린 뒤, 현재 구독 중인 스트림을 확인할 수 있습니다.
+WebSocket 연결이 활성화된 상태에서 현재 구독하고 있는 스트림 정보를 확인할 수 있습니다.
 
 ```python
 await ws.send(json.dumps([
@@ -211,21 +211,21 @@ await ws.send(json.dumps([
 ]))
 ```
 
-Public과 Private upstream이 모두 활성화된 경우, **각 upstream의 응답이 별도 메시지**로 돌아옵니다.
+공개 및 비공개 업스트림 채널이 모두 활성화되어 있는 경우, **각 업스트림의 응답 결과가 서로 다른 별개의 메시지**로 반환됩니다.
 
-### Python — 연결 후 추가 구독
+### 8. 연결 상태에서 추가로 구독하기
 
-WebSocket 연결을 유지한 채 새 구독 메시지를내면 됩니다. 필요한 upstream만 lazy하게 연결됩니다.
+WebSocket 연결을 해제하지 않고 새로운 구독 메시지를 보낼 수 있습니다. 이 경우 필요한 업스트림 채널이 그 시점에 실시간(Lazy)으로 연결됩니다.
 
 ```python
 async with websockets.connect(uri, additional_headers=headers) as ws:
-    # 먼저 ticker만
+    # 먼저 ticker 스트림만 구독
     await ws.send(json.dumps([
         {"ticket": str(uuid.uuid4())},
         {"type": "ticker", "codes": ["KRW-BTC"]},
     ]))
 
-    # 이후 myOrder 추가
+    # 이후 동일한 연결 상에서 myOrder 스트림을 추가로 구독
     await ws.send(json.dumps([
         {"ticket": str(uuid.uuid4())},
         {"type": "myOrder", "codes": ["KRW-BTC"]},
@@ -237,9 +237,9 @@ async with websockets.connect(uri, additional_headers=headers) as ws:
 
 ---
 
-## 완성 예제 스크립트
+## 전체 실행 예제 스크립트
 
-아래 스크립트는 연결 → 혼합 구독 → 30초간 수신 → 종료까지 한 번에 보여 줍니다.
+아래 Python 스크립트는 연결 수립, 혼합 구독 요청, 30초간의 이벤트 실시간 수신 및 연결 종료까지의 전 과정을 보여줍니다.
 
 ```python
 import asyncio
@@ -249,7 +249,7 @@ import uuid
 import websockets
 
 WS_URL = "ws://localhost:8000/ws/"
-TOKEN = "your_sse_bearer_token_here"  # UPBIT_MCP_SSE_TOKEN 미설정 시 headers 생략 가능
+TOKEN = "your_bearer_token_here"  # UPBIT_BRIDGE_AUTH_TOKEN이 설정되지 않은 상태라면 headers 옵션을 비워두어도 무방합니다.
 
 
 async def main():
@@ -262,7 +262,7 @@ async def main():
             {"type": "myOrder", "codes": ["KRW-BTC"]},
             {"format": "DEFAULT"},
         ]))
-        print("구독 완료. 이벤트 수신 중... (30초)")
+        print("구독 요청이 완료되었습니다. 이벤트를 기다리는 중입니다... (30초 동안 유지)")
 
         try:
             async with asyncio.timeout(30):
@@ -271,7 +271,7 @@ async def main():
                     stream_type = data.get("type", "unknown")
                     print(f"[{stream_type}] {message[:120]}...")
         except TimeoutError:
-            print("종료")
+            print("대기 시간이 만료되어 연결을 안전하게 마칩니다.")
 
 
 if __name__ == "__main__":
@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
 ---
 
-## 동작 원리
+## 내부 동작 아키텍처
 
 ```mermaid
 sequenceDiagram
@@ -289,72 +289,72 @@ sequenceDiagram
     participant Public as ws_public
     participant Private as ws_private
 
-    Client->>Gateway: WebSocket connect /ws/
-    Client->>Gateway: 구독 JSON (ticker + myOrder)
-    Gateway->>Gateway: 메시지 파싱 및 분리
-    Gateway->>Public: ticker 구독
-    Gateway->>Private: myOrder 구독 (JWT 자동)
-    Public-->>Gateway: ticker 이벤트
-    Private-->>Gateway: myOrder 이벤트
-    Gateway-->>Client: 이벤트 relay
+    Client->>Gateway: WebSocket 연결 요청 (/ws/)
+    Client->>Gateway: 구독 JSON 요청 (ticker + myOrder)
+    Gateway->>Gateway: 메시지 분석 및 분류 작업 진행
+    Gateway->>Public: ticker 구독 요청 전송
+    Gateway->>Private: myOrder 구독 요청 전송 (JWT 인증 대행)
+    Public-->>Gateway: ticker 실시간 이벤트 발생
+    Private-->>Gateway: myOrder 실시간 이벤트 발생
+    Gateway-->>Client: 실시간 이벤트 최종 중계 (Relay)
 ```
 
-- **Lazy connect**: public만 쓰면 `ws_public`만, private만 쓰면 `ws_private`만 연결됩니다.
-- **1:1 세션**: 클라이언트 WebSocket 하나당 upstream은 최대 2개(public + private)입니다.
-- **프로토콜 호환**: 업비트 공식 WebSocket 문서의 메시지 형식을 그대로 사용합니다.
+- **지연 연결(Lazy Connect)**: 공개 채널만 사용하면 `ws_public`만 활성화되고, 비공개 채널 정보가 유입되는 시점에 비로소 `ws_private` 커넥션이 맺어집니다.
+- **1대1 세션 매핑**: 클라이언트의 WebSocket 연결 1개당 내부 업스트림 커넥션은 최대 2개(공개 1개 + 비공개 1개)까지만 생성되므로 관리가 수월합니다.
+- **표준 프로토콜 호환**: 업비트의 공식 WebSocket 개발 문서에 명시된 원본 메시지 형식을 일관되게 지원합니다.
 
 ---
 
-## 에러 응답
+## 오류 대응 응답 포맷
 
-게이트웨이가 메시지를 처리하지 못하면 JSON 형태의 에러를 돌려줍니다.
+게이트웨이에서 특정 메시지를 원활하게 처리하지 못하는 경우 아래와 같은 JSON 에러 규격으로 응답을 돌려줍니다.
 
 ```json
 {"error": "API 키가 설정되지 않았습니다. private 스트림에는 UPBIT_ACCESS_KEY가 필요합니다."}
 ```
 
-| 상황 | 에러 메시지 예시 |
+| 예외 상황 | 에러 메시지 예시 |
 |------|------------------|
-| Private 구독인데 API 키 없음 | `API 키가 설정되지 않았습니다...` |
-| 알 수 없는 `type` | `Unknown subscription type(s): ...` |
-| 빈 구독 메시지 | `No subscription types in message` |
-| 잘못된 JSON | `Expected a JSON array` |
-| Bearer 토큰 불일치 | WebSocket 연결 자체가 거부됨 (HTTP 4401) |
+| 비공개 구독 요청 시 API 키 누락 | `API 키가 설정되지 않았습니다. private 스트림에는 UPBIT_ACCESS_KEY가 필요합니다.` |
+| 잘못되거나 존재하지 않는 `type` 지정 | `Unknown subscription type(s): ...` |
+| 구독할 유형을 비워둔 채 전송 | `No subscription types in message` |
+| 규격에 맞지 않는 잘못된 포맷의 데이터 전송 | `Expected a JSON array` |
+| Bearer 토큰 인증 실패 | WebSocket 연결 자체 거부 (HTTP 4401 코드 반환) |
 
 ---
 
-## 자주 묻는 질문
+## 자주 묻는 질문(FAQ)
 
-### 업비트 API 키를 클라이언트에 넣어야 하나요?
+### 업비트 API 키를 클라이언트 앱에 직접 입력해야 하나요?
 
-아닙니다. Private 스트림은 **서버 컨테이너의** `UPBIT_ACCESS_KEY` / `UPBIT_SECRET_KEY`로 인증합니다. 클라이언트는 `UPBIT_MCP_SSE_TOKEN`(설정한 경우)만 알면 됩니다.
+아닙니다. 비공개 스트림 연결에 필요한 JWT 인증 서명은 **게이트웨이 서버 컨테이너 내부의** `UPBIT_ACCESS_KEY`와 `UPBIT_SECRET_KEY`를 바탕으로 자동 처리됩니다. 클라이언트 측은 게이트웨이 접속 시 필요한 `UPBIT_BRIDGE_AUTH_TOKEN` 정보만 알고 있으면 됩니다.
 
-### Public만 쓰고 싶은데 API 키가 꼭 필요한가요?
+### 공개 스트림만 이용하는 경우에도 API 키 설정이 필수인가요?
 
-아닙니다. `ticker`, `trade`, `orderbook`, `candle.*` 구독은 API 키 없이 사용할 수 있습니다.
+아닙니다. `ticker`, `trade`, `orderbook`, `candle.*`와 같은 시장 정보 채널은 API 키 등록 절차 없이 자유롭게 연결해서 활용하실 수 있습니다.
 
-### 업비트에 직접 연결하는 것과 뭐가 다른가요?
+### 업비트 서버에 다이렉트로 연동하는 방식과 비교해 어떤 이점이 있나요?
 
-- Private 스트림: 클라이언트가 JWT를 만들 필요 없음
-- 단일 URL: public/private를 하나의 `ws://host/ws/`로 통합
-- 접근 제어: `UPBIT_MCP_SSE_TOKEN`으로 게이트웨이 자체를 보호 가능
+- **인증 간소화**: 클라이언트가 골치 아픈 JWT 서명 알고리즘을 매번 구현할 필요가 없습니다.
+- **통합 커넥션**: 공개 정보와 비공개 정보를 하나의 `ws://host/ws/` 주소로 간결하게 취합할 수 있습니다.
+- **접근 통제**: 게이트웨이 레벨에서 `UPBIT_BRIDGE_AUTH_TOKEN`을 통해 악성 접속 시도를 사전에 차단합니다.
 
-### REST MCP Tool과 같이 쓸 수 있나요?
+### 기존 REST MCP 도구와 함께 병행해 사용할 수 있나요?
 
-네. 같은 컨테이너에서 `/sse`(MCP Tool)와 `/ws/`(실시간 스트림)를 동시에 제공합니다. 시세 조회는 MCP Tool, 실시간 모니터링은 WebSocket으로 나눠 쓰면 됩니다.
+네, 가능합니다. 단일 컨테이너 내부에서 `/sse` 경로(MCP Tool 호출 처리)와 `/ws/` 경로(실시간 메시지 중계)를 모두 동시 지원합니다. 일반적으로 개별 정보 확인은 MCP 도구를, 실시간 시세 변동 관찰은 WebSocket을 나누어 병용하는 방식이 권장됩니다.
 
 ---
 
-## 참고 링크
+## 참고 사이트 링크
 
-- [업비트 WebSocket API 문서](https://docs.upbit.com/reference/websocket)
+- [업비트 공식 WebSocket API 개발 가이드](https://docs.upbit.com/reference/websocket)
 - [Upbit SDK ↔ MCP 구현 현황](./upbit-sdk-mcp-coverage.md)
-- [프로젝트 README](../README.md) — Docker 실행 및 환경 변수 설정
+- [프로젝트 README](../README.md) — 컨테이너 실행 및 환경 변수 상세 안내
 
 ---
 
-## 주의사항
+## 운영 시 유의사항
 
-- Private 스트림에는 **실제 계정의 주문·잔고 정보**가 포함됩니다. `UPBIT_MCP_SSE_TOKEN`을 반드시 설정하세요.
-- 이 서버는 실거래 API 키로 동작할 수 있습니다. 키 권한(조회/주문/출금)을 최소한으로 설정하세요.
-- WebSocket은 장시간 연결입니다. 클라이언트 측에서 재연결 로직을 구현하는 것을 권장합니다.
+- 비공개(Private) 스트림을 사용하시는 경우 **실제 사용자 계정의 매매 내역 및 자산 현황**이 고스란히 유출될 수 있습니다. 운영망에 노출하실 때는 반드시 강력한 임의 문자열로 `UPBIT_BRIDGE_AUTH_TOKEN` 설정을 적용해 주십시오.
+- 본 서버는 실거래가 유효한 API 키 정보를 보관할 수 있습니다. 거래소 API 설정 시 주문이나 출금 등의 권한은 가급적 최소화하여 발급받는 것을 권장합니다.
+- WebSocket 연결은 장시간 유지되는 스트림 속성을 지닙니다. 네트워크 불안정으로 인한 접속 유실을 감안하여 클라이언트 측 애플리케이션 개발 시 적절한 자동 재연결(Auto-reconnect) 전략을 설계하는 것이 안전합니다.

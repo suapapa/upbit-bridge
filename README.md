@@ -1,16 +1,16 @@
 # Upbit Bridge
 
-A unified gateway and bridge for [Upbit](https://upbit.com) Cryptocurrency Exchange OpenAPI using the Model Context Protocol (MCP) and WebSockets. This project provides tools to interact with Upbit exchange services, such as retrieving market data (quotes, orderbooks, trade history, chart data), account information, creating and canceling orders, managing deposits/withdrawals, and performing technical analysis.
+Upbit Bridge는 Model Context Protocol(MCP)과 WebSockets를 기반으로 업비트(Upbit) 가상자산 거래소 OpenAPI를 편리하게 이어주는 통합 게이트웨이입니다. 시세 조회(현재가, 호가, 체결 내역, 차트 데이터), 계좌 정보 조회, 주문 작성 및 취소, 입출금 관리, 기술적 지표 분석 등 업비트 거래소 서비스와 연동할 수 있는 다양한 도구를 제공합니다.
 
-## Features
+## 주요 기능
 
-- Market data retrieval (ticker, orderbook, trades, candle data)
-- Account information (balance, order history)
-- Order creation and cancellation
-- Deposit and withdrawal functions
-- Technical analysis tools
+- 시장 데이터 조회 (현재가, 호가, 체결 내역, 캔들 데이터)
+- 계좌 정보 확인 (잔고, 주문 내역)
+- 주문 생성 및 취소
+- 입출금 기능 지원
+- 기술적 분석 도구 제공
 
-## Documentation
+## 문서 안내
 
 | 문서 | 설명 |
 |------|------|
@@ -26,44 +26,44 @@ A unified gateway and bridge for [Upbit](https://upbit.com) Cryptocurrency Excha
     아래는 실제 채팅 예시 이미지입니다.
   </p>
   <img src="./assets/img1.png" alt="example1" width="600"/>
-    <img src="./assets/img2.png" alt="example2" width="600"/>
+  <img src="./assets/img2.png" alt="example2" width="600"/>
 </details>
 
-## Prerequisites
+## 시작하기 전에
 
-Before you begin, you need to get your Upbit API keys:
+서비스를 이용하려면 먼저 업비트 API 키가 필요합니다.
 
-1. Create an account on [Upbit](https://upbit.com) if you don't already have one
-2. Go to the [Upbit Developer Center](https://upbit.com/service_center/open_api_guide)
-3. Create a new API key
-4. Make sure to set appropriate permissions (read, trade, withdraw as needed)
-5. Store your API keys in a `.env` file (see Usage section)
+1. 계정이 없다면 [업비트](https://upbit.com)에 회원가입을 해 주세요.
+2. [업비트 개발자 센터](https://upbit.com/service_center/open_api_guide)에 접속합니다.
+3. Open API Key를 새로 발급받습니다.
+4. 쓰임새에 맞게 적절한 권한(조회, 주문, 입출금 등)을 설정해 주세요.
+5. 발급받은 API 키는 `.env` 파일에 안전하게 저장합니다. (사용법 섹션 참고)
 
-> 공개 API(시세, 호가, 캔들 등)만 사용할 경우 API 키 없이도 동작합니다.
+> 시세나 호가, 캔들 같은 공개 API만 사용하신다면 API 키가 없어도 작동합니다.
 
-## Usage
+## 사용법
 
-이 MCP 서버는 Docker 컨테이너로 SSE transport(`http://0.0.0.0:8000/sse`)를 통해 실행됩니다.
+이 MCP 서버는 Docker 컨테이너를 바탕으로 SSE transport(`http://0.0.0.0:8000/sse`)를 거쳐 실행할 수 있습니다.
 
 ### 1. 환경 변수 설정
 
-프로젝트 루트에 `.env` 파일을 만듭니다.
+프로젝트 루트 디렉토리에 `.env` 파일을 생성합니다.
 
 ```env
 UPBIT_ACCESS_KEY=your_access_key_here
 UPBIT_SECRET_KEY=your_secret_key_here
-UPBIT_MCP_SSE_TOKEN=your_sse_bearer_token_here
+UPBIT_BRIDGE_AUTH_TOKEN=your_bearer_token_here
 ```
 
-| 변수 | 필수 | 설명 |
+| 변수 | 필수 여부 | 설명 |
 |------|------|------|
-| `UPBIT_ACCESS_KEY` | 선택 | 업비트 Access Key (계정·주문·입출금 API) |
+| `UPBIT_ACCESS_KEY` | 선택 | 업비트 Access Key (계정·주문·입출금 API 용도) |
 | `UPBIT_SECRET_KEY` | 선택 | 업비트 Secret Key |
-| `UPBIT_MCP_SSE_TOKEN` | 권장 | SSE/WebSocket 엔드포인트 Bearer 인증 토큰. 미설정 시 `/sse`, `/messages`, `/ws/`가 보호되지 않습니다. |
+| `UPBIT_BRIDGE_AUTH_TOKEN` | 권장 | SSE/WebSocket 엔드포인트 Bearer 인증 토큰. 설정하지 않으면 `/sse`, `/messages`, `/ws/` 경로가 보호되지 않습니다. |
 
 ### 2. Docker 이미지 실행
 
-**GHCR에서 pull (권장)**
+**GHCR에서 가져오기 (권장)**
 
 ```bash
 docker pull ghcr.io/suapapa/upbit-bridge:latest
@@ -75,7 +75,7 @@ docker run -d \
   ghcr.io/suapapa/upbit-bridge:latest
 ```
 
-**로컬에서 빌드**
+**로컬에서 빌드하기**
 
 ```bash
 git clone https://github.com/suapapa/upbit-bridge.git
@@ -90,7 +90,7 @@ docker run -d \
   upbit-bridge
 ```
 
-컨테이너가 정상 기동되었는지 확인합니다.
+컨테이너가 제대로 실행되었는지 확인해 봅니다.
 
 ```bash
 curl http://localhost:8000/health
@@ -99,18 +99,18 @@ curl http://localhost:8000/health
 
 ### 3. MCP 클라이언트 연결
 
-Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연결하고 사용하는 방법은 **[MCP 사용 가이드](docs/mcp_usage.md)**를 참고하세요. (SSE 및 stdio 전송 방식 모두 지원)
+Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연동하고 활용하는 구체적인 방법은 **[MCP 사용 가이드](docs/mcp_usage.md)**를 참고해 주세요. (SSE 및 stdio 전송 방식 모두 지원)
 
 ### 4. WebSocket 게이트웨이 (`/ws/`)
 
-단일 `/ws/` 엔드포인트에서 업비트 public 시세(`ticker`, `trade`, `orderbook`, `candle.*`)와 private 계정 스트림(`myOrder`, `myAsset`)을 모두 사용할 수 있습니다. 연결 방법, 구독 예시, 혼합 구독, 에러 처리 등은 **[WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md)**에서 확인하세요.
+단일 `/ws/` 엔드포인트 하나로 업비트 public 시세(`ticker`, `trade`, `orderbook`, `candle.*`)와 private 계정 스트림(`myOrder`, `myAsset`)을 모두 받아볼 수 있습니다. 상세한 연결 방법과 구독 예시, 혼합 구독 및 에러 처리 방안은 **[WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md)**에서 확인하실 수 있습니다.
 
-## Caution
+## 주의사항
 
-- This server can process real trades, so use it carefully.
-- Keep your API keys secure and never commit them to public repositories.
-- `UPBIT_MCP_SSE_TOKEN`을 설정하여 SSE 엔드포인트를 외부에 노출할 때 반드시 보호하세요.
+- 본 서버는 실제 거래를 실행할 수 있으므로 다룰 때 각별히 주의해 주시기 바랍니다.
+- API 키는 안전하게 보관하시고, 실수로 공개 저장소에 업로드하지 않도록 유의해 주세요.
+- SSE 엔드포인트를 외부에 노출할 때는 `UPBIT_BRIDGE_AUTH_TOKEN`을 설정해 안전하게 차단막을 마련해 두는 것이 좋습니다.
 
-## License
+## 라이선스
 
 MIT

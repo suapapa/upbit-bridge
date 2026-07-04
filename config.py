@@ -8,8 +8,8 @@ load_dotenv()
 UPBIT_ACCESS_KEY = os.environ.get("UPBIT_ACCESS_KEY")
 UPBIT_SECRET_KEY = os.environ.get("UPBIT_SECRET_KEY")
 
-# SSE transport Bearer token (optional; when set, /sse and /messages require Authorization)
-UPBIT_MCP_SSE_TOKEN = os.environ.get("UPBIT_MCP_SSE_TOKEN")
+# SSE/WebSocket 인증을 위한 Bearer 토큰 (선택 사항; 설정 시 외부 접근이 제한됨)
+UPBIT_BRIDGE_AUTH_TOKEN = os.environ.get("UPBIT_BRIDGE_AUTH_TOKEN")
 
 # API 키 검증
 if not UPBIT_ACCESS_KEY or not UPBIT_SECRET_KEY:
