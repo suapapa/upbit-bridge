@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Upbit Bridge는 업비트 OpenAPI를 MCP와 WebSocket으로 연결하는 통합 게이트웨이입니다. AI 클라이언트에서 시세 조회, 주문, 실시간 스트림을 바로 씁니다."
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Upbit Bridge · 업비트 OpenAPI 통합 게이트웨이</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="logo" href="./" aria-label="Upbit Bridge 홈">
+          <svg
+            class="logo__mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect width="32" height="32" rx="8" fill="#1E293B" />
+            <path
+              d="M8 20L16 8L24 20H8Z"
+              stroke="#F59E0B"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+            <path d="M12 24H20" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <span translate="no">Upbit Bridge</span>
+        </a>
+
+        <nav class="site-nav" aria-label="주요 메뉴">
+          <a href="#features">기능</a>
+          <a href="#architecture">구조</a>
+          <a href="#start">시작하기</a>
+          <a href="#docs">문서</a>
+        </nav>
+
+        <div class="header-actions">
+          <details class="nav-details">
+            <summary class="nav-toggle" aria-label="메뉴 열기">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </summary>
+            <nav class="mobile-nav" aria-label="모바일 메뉴">
+              <a href="#features">기능</a>
+              <a href="#architecture">구조</a>
+              <a href="#start">시작하기</a>
+              <a href="#docs">문서</a>
+            </nav>
+          </details>
+          <a class="btn btn--primary" href="https://github.com/suapapa/upbit-bridge">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero__content">
+            <p class="hero__label" translate="no">MCP · WebSocket · OpenAPI</p>
+            <h1 class="hero__title" id="hero-title">
+              업비트 API를<br />
+              <span>AI 도구</span>에 바로 연결
+            </h1>
+            <p class="hero__lead">
+              <span translate="no">Upbit Bridge</span>는 업비트 OpenAPI를
+              <span translate="no">Model Context Protocol(MCP)</span>과 WebSocket으로 이어 줍니다.
+              Claude나 Cursor에서 시세 조회, 계좌 확인, 주문을 한곳에서 처리합니다.
+            </p>
+            <div class="hero__actions">
+              <a class="btn btn--primary" href="#start">빠르게 시작하기</a>
+              <a class="btn btn--ghost" href="#docs">문서 보기</a>
+            </div>
+          </div>
+
+          <figure class="demo-panel" aria-labelledby="demo-caption">
+            <figcaption id="demo-caption" class="sr-only">
+              Upbit Bridge 서버 헬스 체크와 MCP 클라이언트 설정 예시
+            </figcaption>
+            <div class="demo-panel__bar" aria-hidden="true">
+              <span class="demo-panel__dot"></span>
+              <span class="demo-panel__dot"></span>
+              <span class="demo-panel__dot"></span>
+              <span class="demo-panel__title">terminal · mcp-config.json</span>
+            </div>
+            <div class="demo-panel__body">
+              <div class="demo-block">
+                <p class="demo-block__label">서버 확인</p>
+                <pre><code><span class="comment">$ </span>docker run -d \
+  --env-file .env \
+  -p 8000:8000 \
+  ghcr.io/suapapa/upbit-bridge:latest
+
+<span class="comment">$ </span>curl http://localhost:8000/health
+<span class="string">{"status":"ok"}</span></code></pre>
+              </div>
+              <div class="demo-block">
+                <p class="demo-block__label">Cursor / Claude Desktop</p>
+                <pre><code>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"upbit-bridge"</span>: {
+      <span class="key">"url"</span>: <span class="string">"http://localhost:8000/sse"</span>
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section" id="features" aria-labelledby="features-title">
+        <div class="container">
+          <header class="section__header">
+            <h2 class="section__title" id="features-title">거래소 API를 에이전트가 읽기 쉽게</h2>
+            <p class="section__desc">
+              시세, 주문, 입출금, 기술적 분석까지 업비트 OpenAPI를 MCP 도구와 리소스로
+              묶어 뒀습니다. 공개 API는 키 없이 쓰고, 계좌·주문은 환경 변수로 인증합니다.
+            </p>
+          </header>
+
+          <div class="features-bento">
+            <article class="bento-cell">
+              <h3>시장 데이터 &amp; 기술적 분석</h3>
+              <p>
+                현재가, 호가, 체결, 캔들, KRW 마켓 요약. RSI·MACD 같은 지표도 캔들
+                데이터에서 바로 계산합니다.
+              </p>
+            </article>
+
+            <article class="bento-cell">
+              <h3>계좌 &amp; 주문</h3>
+              <p>
+                잔고 조회, 지정가·시장가 주문, 미체결 일괄 취소. 주문 가능 정보와
+                상세 내역까지 MCP 도구로 호출합니다.
+              </p>
+            </article>
+
+            <article class="bento-cell">
+              <h3>실시간 WebSocket</h3>
+              <p>
+                <code translate="no">/ws/</code> 하나로 ticker, orderbook, myOrder 등
+                public/private 스트림을 받습니다.
+              </p>
+              <p>
+                JWT 인증은 게이트웨이가 대신 처리합니다. 클라이언트가 Access Key를
+                보낼 필요가 없습니다.
+              </p>
+            </article>
+
+            <article class="bento-cell">
+              <h3>입출금</h3>
+              <p>
+                입출금 내역, 출금 요청, 입금·등록 주소 확인, 지갑 상태 점검까지 한
+                세트로 다룹니다.
+              </p>
+            </article>
+
+            <article class="bento-cell">
+              <h3>프롬프트 템플릿</h3>
+              <p>
+                티커 해석, 포트폴리오 분석, 주문 도움말, 매매 전략. 에이전트가 바로
+                참고할 프롬프트 4종이 들어 있습니다.
+              </p>
+            </article>
+
+            <article class="bento-cell">
+              <h3>엔드포인트 보호</h3>
+              <p>
+                <code translate="no">UPBIT_BRIDGE_AUTH_TOKEN</code>으로 SSE·WebSocket
+                경로에 Bearer 인증을 걸 수 있습니다. 외부에 노출할 때는 꼭 설정하세요.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--muted" id="architecture" aria-labelledby="arch-title">
+        <div class="container">
+          <header class="section__header">
+            <h2 class="section__title" id="arch-title">하나의 서버, 두 가지 연결 방식</h2>
+            <p class="section__desc">
+              Docker로 띄우면 MCP(SSE)와 WebSocket 게이트웨이가 한 프로세스에서 같이
+              돌아갑니다. 로컬에서는 stdio로 클라이언트가 프로세스를 직접 띄워도 됩니다.
+            </p>
+          </header>
+
+          <div class="arch-flow" role="img" aria-label="AI 클라이언트에서 Upbit Bridge를 거쳐 업비트 API로 연결되는 흐름">
+            <div class="arch-node">
+              <strong>AI 클라이언트</strong>
+              <span>Cursor, Claude Desktop</span>
+            </div>
+            <div class="arch-arrow" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12h14M13 6l6 6-6 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="arch-node">
+              <strong translate="no">Upbit Bridge</strong>
+              <span>MCP + /ws/ 게이트웨이</span>
+            </div>
+            <div class="arch-arrow" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12h14M13 6l6 6-6 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div class="arch-node">
+              <strong>업비트 API</strong>
+              <span>REST + WebSocket</span>
+            </div>
+          </div>
+
+          <div class="arch-grid">
+            <article class="bento-cell">
+              <h3>MCP: AI 클라이언트 연동</h3>
+              <p>
+                Claude Desktop, Cursor 등에서 도구 호출로 업비트 API를 씁니다. SSE는
+                <code translate="no">http://localhost:8000/sse</code>, stdio는
+                <code translate="no">python main.py</code>로 연결합니다.
+              </p>
+            </article>
+            <article class="bento-cell">
+              <h3>WebSocket: 스트림 중계</h3>
+              <p>
+                Public(ticker, orderbook)은 키 없이, Private(myOrder, myAsset)은
+                컨테이너에 등록한 키로 JWT를 만들어 upstream에 붙입니다.
+              </p>
+            </article>
+          </div>
+
+          <aside class="notice" role="note">
+            <svg class="notice__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <p>
+              <strong>주의:</strong> 이 서버는 실제 주문·출금을 실행합니다. API 키는
+              <code translate="no">.env</code>에만 두고, 공개 저장소에 올리지 마세요.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="tools" aria-labelledby="tools-title">
+        <div class="container">
+          <header class="section__header">
+            <h2 class="section__title" id="tools-title">주요 MCP 도구</h2>
+            <p class="section__desc">
+              전체 목록과 인증 여부는 문서에서 확인하세요. 아래는 자주 쓰는 도구
+              이름입니다.
+            </p>
+          </header>
+          <ul class="tool-list" aria-label="MCP 도구 이름 목록">
+            <li translate="no">get_ticker</li>
+            <li translate="no">get_orderbook</li>
+            <li translate="no">get_candles</li>
+            <li translate="no">technical_analysis</li>
+            <li translate="no">get_market_summary</li>
+            <li translate="no">get_accounts</li>
+            <li translate="no">create_order</li>
+            <li translate="no">cancel_order</li>
+            <li translate="no">get_deposits_withdrawals</li>
+            <li translate="no">create_withdraw</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section section--muted" id="start" aria-labelledby="start-title">
+        <div class="container">
+          <header class="section__header">
+            <h2 class="section__title" id="start-title">3단계로 시작하기</h2>
+            <p class="section__desc">
+              공개 시세만 볼 거라면 API 키 없이도 됩니다. 계좌·주문·입출금은 업비트
+              개발자 센터에서 키를 발급받아 주세요.
+            </p>
+          </header>
+          <ol class="steps">
+            <li class="step">
+              <h3>환경 변수 준비</h3>
+              <p>
+                프로젝트 루트에 <code translate="no">.env</code>를 만들고 Access Key, Secret Key,
+                Bearer 토큰(권장)을 넣습니다.
+              </p>
+            </li>
+            <li class="step">
+              <h3>Docker로 실행</h3>
+              <p>
+                <code translate="no">ghcr.io/suapapa/upbit-bridge:latest</code> 이미지를
+                받아 포트 8000으로 띄웁니다. 헬스 체크는
+                <code translate="no">/health</code>입니다.
+              </p>
+            </li>
+            <li class="step">
+              <h3>클라이언트 연결</h3>
+              <p>
+                Cursor나 Claude Desktop MCP 설정에 SSE URL을 등록합니다. 로컬만 쓸
+                때는 stdio 방식이 더 간단할 수 있습니다.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section" id="docs" aria-labelledby="docs-title">
+        <div class="container">
+          <header class="section__header">
+            <h2 class="section__title" id="docs-title">더 자세한 내용</h2>
+            <p class="section__desc">
+              저장소 <code translate="no">docs/</code> 폴더에 연동 방법과 도구 설명이
+              정리되어 있습니다.
+            </p>
+          </header>
+          <div class="doc-grid">
+            <a
+              class="doc-link"
+              href="https://github.com/suapapa/upbit-bridge/blob/main/docs/mcp_usage.md"
+            >
+              <span class="doc-link__title">MCP 사용 가이드</span>
+              <span class="doc-link__desc">Claude Desktop·Cursor 연결 (SSE, stdio)</span>
+            </a>
+            <a
+              class="doc-link"
+              href="https://github.com/suapapa/upbit-bridge/blob/main/docs/mcp-tools.md"
+            >
+              <span class="doc-link__title">MCP 도구 소개</span>
+              <span class="doc-link__desc">Tool, Resource, Prompt 전체 목록</span>
+            </a>
+            <a
+              class="doc-link"
+              href="https://github.com/suapapa/upbit-bridge/blob/main/docs/ws_usage.md"
+            >
+              <span class="doc-link__title">WebSocket 게이트웨이</span>
+              <span class="doc-link__desc">/ws/ 연결, public·private 라우팅</span>
+            </a>
+            <a
+              class="doc-link"
+              href="https://github.com/suapapa/upbit-bridge/blob/main/docs/upbit-sdk-mcp-coverage.md"
+            >
+              <span class="doc-link__title">SDK ↔ MCP 커버리지</span>
+              <span class="doc-link__desc">구현 현황 체크리스트</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="cta-title">
+        <div class="container">
+          <div class="cta">
+            <h2 id="cta-title">지금 바로 연결해 보세요</h2>
+            <p>
+              Docker 한 줄이면 MCP와 WebSocket이 같이 뜹니다. README만 따라가도 몇
+              분 안에 AI 클라이언트에서 업비트 API를 호출합니다.
+            </p>
+            <div class="cta__actions">
+              <a
+                class="btn btn--accent"
+                href="https://github.com/suapapa/upbit-bridge"
+              >
+                GitHub에서 보기
+              </a>
+              <a
+                class="btn btn--ghost"
+                href="https://github.com/suapapa/upbit-bridge#readme"
+              >
+                README 열기
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <p>
+          <span translate="no">Upbit Bridge</span> · MIT License · 업비트 OpenAPI 비공식
+          연동 도구
+        </p>
+        <nav aria-label="푸터 링크">
+          <a href="https://github.com/suapapa/upbit-bridge">GitHub</a>
+          <a href="https://upbit.com/service_center/open_api_guide">업비트 Open API</a>
+          <a href="#features">기능</a>
+          <a href="#start">시작하기</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
