@@ -1,3 +1,7 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+#
+# Upbit Bridge stdio transport — see docs/mcp_usage.md section 3.
+
 startCommand:
   type: stdio
   configSchema:
@@ -6,27 +10,25 @@ startCommand:
     properties:
       UPBIT_ACCESS_KEY:
         type: string
-        description: Upbit API access key
+        description: Upbit API access key (optional; public market data works without keys)
       UPBIT_SECRET_KEY:
         type: string
-        description: Upbit API secret key
-    required: ["UPBIT_ACCESS_KEY", "UPBIT_SECRET_KEY"]
+        description: Upbit API secret key (optional; required for account, order, and deposit/withdraw APIs)
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
     (config) => {
-      if (!config.UPBIT_ACCESS_KEY || !config.UPBIT_SECRET_KEY) {
-        throw new Error("Upbit API keys are required");
+      const env = {};
+      if (config.UPBIT_ACCESS_KEY) {
+        env.UPBIT_ACCESS_KEY = config.UPBIT_ACCESS_KEY;
       }
-      
+      if (config.UPBIT_SECRET_KEY) {
+        env.UPBIT_SECRET_KEY = config.UPBIT_SECRET_KEY;
+      }
+
       return {
-        command: "python",
-        args: [
-          "main.py"
-        ],
-        env: {
-          UPBIT_ACCESS_KEY: config.UPBIT_ACCESS_KEY,
-          UPBIT_SECRET_KEY: config.UPBIT_SECRET_KEY
-        }
+        command: "uv",
+        args: ["--directory", ".", "run", "main.py"],
+        env
       };
     }
