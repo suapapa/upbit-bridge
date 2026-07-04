@@ -1,6 +1,6 @@
 # WebSocket 게이트웨이 (`/ws/`) 사용 가이드
 
-Upbit MCP Server의 `/ws/` 엔드포인트는 업비트 WebSocket API를 **하나의 연결**로 사용할 수 있게 해 주는 스마트 게이트웨이입니다.
+Upbit Bridge의 `/ws/` 엔드포인트는 업비트 WebSocket API를 **하나의 연결**로 사용할 수 있게 해 주는 스마트 게이트웨이입니다.
 
 클라이언트는 업비트 WebSocket 프로토콜을 그대로 따르면 됩니다. 서버가 구독 메시지를 읽어 **public** 스트림과 **private** 스트림을 자동으로 나눠 각각의 upstream에 전달합니다.
 
@@ -21,10 +21,10 @@ Docker로 SSE transport 모드로 기동합니다 (기본 포트 `8000`).
 
 ```bash
 docker run -d \
-  --name upbit-mcp-server \
+  --name upbit-bridge \
   --env-file .env \
   -p 8000:8000 \
-  ghcr.io/suapapa/upbit-mcp-server:latest
+  ghcr.io/suapapa/upbit-bridge:latest
 ```
 
 로컬에서 직접 실행할 경우:

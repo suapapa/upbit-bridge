@@ -1,7 +1,7 @@
 [project]
-name = "upbit-mcp-server"
+name = "upbit-bridge"
 version = "0.1.0"
-description = "A FastMCP server for Upbit public API with private API support"
+description = "A unified gateway and bridge for Upbit public/private APIs, WebSockets, and MCP"
 authors = [
     { name = "Solang Kim", email = "solangii1229@gmail.com" },
     { name = "Homin Lee", email = "i@homin.dev" },

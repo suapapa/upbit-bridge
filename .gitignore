@@ -67,3 +67,7 @@ logs/
 
 # uv 관련
 .uv/
+
+# AI
+.agents
+skills-lock.json

@@ -1205,7 +1205,7 @@ wheels = [
 ]
 
 [[package]]
-name = "upbit-mcp-server"
+name = "upbit-bridge"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

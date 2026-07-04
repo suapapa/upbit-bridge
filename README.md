@@ -1,6 +1,6 @@
-# Upbit MCP Server
+# Upbit Bridge
 
-A server implementation for [Upbit](https://upbit.com) Cryptocurrency Exchange OpenAPI using the Model Context Protocol (MCP). This project provides tools to interact with Upbit exchange services, such as retrieving market data (quotes, orderbooks, trade history, chart data), account information, creating and canceling orders, managing deposits/withdrawals, and performing technical analysis.
+A unified gateway and bridge for [Upbit](https://upbit.com) Cryptocurrency Exchange OpenAPI using the Model Context Protocol (MCP) and WebSockets. This project provides tools to interact with Upbit exchange services, such as retrieving market data (quotes, orderbooks, trade history, chart data), account information, creating and canceling orders, managing deposits/withdrawals, and performing technical analysis.
 
 ## Features
 
@@ -14,6 +14,7 @@ A server implementation for [Upbit](https://upbit.com) Cryptocurrency Exchange O
 
 | 문서 | 설명 |
 |------|------|
+| [MCP 사용 가이드](docs/mcp_usage.md) | Claude Desktop 및 Cursor 연결 설정 (SSE, stdio) |
 | [MCP 도구 소개](docs/mcp-tools.md) | Tool, Resource, Prompt 목록 및 설명 |
 | [Upbit SDK ↔ MCP 구현 현황](docs/upbit-sdk-mcp-coverage.md) | SDK 대비 MCP 커버리지 체크리스트 |
 | [WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md) | `/ws/` 연결, 구독 예시, public/private 라우팅 |
@@ -65,28 +66,28 @@ UPBIT_MCP_SSE_TOKEN=your_sse_bearer_token_here
 **GHCR에서 pull (권장)**
 
 ```bash
-docker pull ghcr.io/suapapa/upbit-mcp-server:latest
+docker pull ghcr.io/suapapa/upbit-bridge:latest
 
 docker run -d \
-  --name upbit-mcp-server \
+  --name upbit-bridge \
   --env-file .env \
   -p 8000:8000 \
-  ghcr.io/suapapa/upbit-mcp-server:latest
+  ghcr.io/suapapa/upbit-bridge:latest
 ```
 
 **로컬에서 빌드**
 
 ```bash
-git clone https://github.com/suapapa/upbit-mcp-server.git
-cd upbit-mcp-server
+git clone https://github.com/suapapa/upbit-bridge.git
+cd upbit-bridge
 
-docker build -t upbit-mcp-server .
+docker build -t upbit-bridge .
 
 docker run -d \
-  --name upbit-mcp-server \
+  --name upbit-bridge \
   --env-file .env \
   -p 8000:8000 \
-  upbit-mcp-server
+  upbit-bridge
 ```
 
 컨테이너가 정상 기동되었는지 확인합니다.
@@ -98,22 +99,7 @@ curl http://localhost:8000/health
 
 ### 3. MCP 클라이언트 연결
 
-SSE transport를 지원하는 MCP 클라이언트에서 아래와 같이 설정합니다.
-
-```json
-{
-  "mcpServers": {
-    "upbit-mcp-server": {
-      "url": "http://localhost:8000/sse",
-      "headers": {
-        "Authorization": "Bearer your_sse_bearer_token_here"
-      }
-    }
-  }
-}
-```
-
-`UPBIT_MCP_SSE_TOKEN`을 설정하지 않은 경우 `headers` 항목은 생략할 수 있습니다.
+Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연결하고 사용하는 방법은 **[MCP 사용 가이드](docs/mcp_usage.md)**를 참고하세요. (SSE 및 stdio 전송 방식 모두 지원)
 
 ### 4. WebSocket 게이트웨이 (`/ws/`)
 
