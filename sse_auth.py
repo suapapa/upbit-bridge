@@ -3,6 +3,13 @@
 import secrets
 
 import uvicorn
+from events_docs import (
+    EVENTS_DOC_PATH,
+    EVENTS_DOC_SPEC_PATH,
+    PUBLIC_DOC_PATHS,
+    events_doc,
+    events_spec,
+)
 from mcp.server.sse import SseServerTransport
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse, Response
@@ -38,7 +45,7 @@ class BearerTokenMiddleware:
             return
 
         path = scope.get("path", "")
-        if path == "/health":
+        if path == "/health" or path in PUBLIC_DOC_PATHS:
             await self.app(scope, receive, send)
             return
 
@@ -75,6 +82,8 @@ async def run_sse_async(mcp, token: str | None = None) -> None:
         debug=mcp.settings.debug,
         routes=[
             Route("/health", endpoint=health),
+            Route(EVENTS_DOC_PATH, endpoint=events_doc),
+            Route(EVENTS_DOC_SPEC_PATH, endpoint=events_spec),
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
             WebSocketRoute("/ws/", endpoint=handle_ws_gateway),
