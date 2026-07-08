@@ -139,36 +139,35 @@ EVENTS_DOC_HTML = f"""<!doctype html>
   <body>
     <div id="asyncapi"></div>
 
-    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@asyncapi/react-component@1.5.25/browser/standalone/index.js"></script>
     <script>
-      fetch("{EVENTS_DOC_SPEC_PATH}")
-        .then(function (res) {{
-          return res.json();
-        }})
-        .then(function (schema) {{
-          ReactDOM.render(
-            React.createElement(AsyncApiStandalone, {{
-              schema: JSON.stringify(schema),
-              config: {{
-                show: {{
-                  sidebar: true,
-                  info: true,
-                  servers: true,
-                  operations: true,
-                  messages: true,
-                  schemas: true
-                }}
-              }}
-            }}),
-            document.getElementById("asyncapi")
-          );
-        }})
-        .catch(function (err) {{
-          document.body.innerHTML = "<pre style='color:#fff;padding:16px'>Failed to load AsyncAPI spec: "
-            + err + "</pre>";
-        }});
+      try {{
+        AsyncApiStandalone.render(
+          {{
+            schema: {{
+              url: "{EVENTS_DOC_SPEC_PATH}",
+              options: {{
+                method: "GET",
+                mode: "cors",
+              }},
+            }},
+            config: {{
+              show: {{
+                sidebar: true,
+                info: true,
+                servers: true,
+                operations: true,
+                messages: true,
+                schemas: true,
+              }},
+            }},
+          }},
+          document.getElementById("asyncapi")
+        );
+      }} catch (err) {{
+        document.body.innerHTML = "<pre style='color:#fff;padding:16px'>Failed to load AsyncAPI spec: "
+          + err + "</pre>";
+      }}
     </script>
   </body>
 </html>
