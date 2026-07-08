@@ -134,12 +134,12 @@ EVENTS_DOC_HTML = f"""<!doctype html>
         height: 100%;
       }}
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/@asyncapi/react-component@1.5.25/styles/default.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/@asyncapi/react-component@3.1.3/styles/default.min.css" />
   </head>
   <body>
     <div id="asyncapi"></div>
 
-    <script src="https://unpkg.com/@asyncapi/react-component@1.5.25/browser/standalone/index.js"></script>
+    <script src="https://unpkg.com/@asyncapi/react-component@3.1.3/browser/standalone/index.js"></script>
     <script>
       try {{
         AsyncApiStandalone.render(
