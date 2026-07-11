@@ -80,6 +80,8 @@ body {
   line-height: 1.6;
   color: var(--color-foreground);
   background-color: var(--color-background);
+  word-break: keep-all;
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
