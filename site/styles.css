@@ -395,6 +395,12 @@ section[id] {
   text-wrap: pretty;
 }
 
+.hero__lead code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--color-primary);
+}
+
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
@@ -537,6 +543,12 @@ section[id] {
   text-wrap: pretty;
 }
 
+.section__desc code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--color-primary);
+}
+
 /* Features bento */
 .features-bento {
   display: grid;
@@ -645,7 +657,41 @@ section[id] {
 
 @media (min-width: 768px) {
   .arch-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* REST API section */
+.api-split {
+  display: grid;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .api-split {
     grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+}
+
+.api-split__heading {
+  margin: 0 0 var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.api-demo {
+  margin-top: 0;
+}
+
+.demo-panel__body--single {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .demo-panel__body--single .demo-block {
+    border-right: none;
   }
 }
 

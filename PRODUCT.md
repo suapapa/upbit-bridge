@@ -6,9 +6,9 @@
 
 ## Users & Purpose
 
-- **Who:** Developers running AI coding assistants (Cursor, Claude Desktop) who trade or analyze crypto on Upbit.
-- **Job:** Connect Upbit OpenAPI to MCP clients without writing custom glue code.
-- **Outcome:** Clone the repo, run Docker, paste MCP config, call tools from chat.
+- **Who:** Developers running AI coding assistants (Cursor, Claude Desktop) or scripts/bots who trade or analyze crypto on Upbit.
+- **Job:** Connect Upbit OpenAPI to MCP clients and REST/WebSocket consumers without writing custom glue code.
+- **Outcome:** Clone the repo, run Docker, paste MCP config or call `/api/v1/`, stream `/ws/`.
 
 ## Brand Personality
 
