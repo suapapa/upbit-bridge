@@ -118,8 +118,9 @@ if __name__ == "__main__":
             print("⚠️  경고: UPBIT_BRIDGE_AUTH_TOKEN이 설정되지 않았습니다. SSE/WebSocket 엔드포인트가 보호되지 않습니다.")
 
         print(f"📡 WebSocket gateway (public + private): ws://{args.host}:{args.port}/ws/")
+        print(f"🛠  REST API v1: http://{args.host}:{args.port}/api/v1/  (docs: /docs/api)")
         if not UPBIT_ACCESS_KEY:
-            print("⚠️  경고: API 키가 없어 /ws/ private 스트림(myOrder, myAsset)을 사용할 수 없습니다.")
+            print("⚠️  경고: API 키가 없어 /ws/ private 스트림(myOrder, myAsset)과 /api/v1 인증 API를 사용할 수 없습니다.")
 
         asyncio.run(run_sse_async(mcp, token=UPBIT_BRIDGE_AUTH_TOKEN))
     else:

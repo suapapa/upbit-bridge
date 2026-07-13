@@ -1,6 +1,6 @@
 # Upbit Bridge
 
-Upbit Bridge는 Model Context Protocol(MCP)과 WebSockets를 기반으로 업비트(Upbit) 가상자산 거래소 OpenAPI를 편리하게 이어주는 통합 게이트웨이입니다. 시세 조회(현재가, 호가, 체결 내역, 차트 데이터), 계좌 정보 조회, 주문 작성 및 취소, 입출금 관리, 기술적 지표 분석 등 업비트 거래소 서비스와 연동할 수 있는 다양한 도구를 제공합니다.
+Upbit Bridge는 Model Context Protocol(MCP), REST API, WebSockets를 기반으로 업비트(Upbit) 가상자산 거래소 OpenAPI를 편리하게 이어주는 통합 게이트웨이입니다. 시세 조회(현재가, 호가, 체결 내역, 차트 데이터), 계좌 정보 조회, 주문 작성 및 취소, 입출금 관리, 기술적 지표 분석 등 업비트 거래소 서비스와 연동할 수 있는 다양한 도구를 제공합니다.
 
 ## 주요 기능
 
@@ -9,6 +9,8 @@ Upbit Bridge는 Model Context Protocol(MCP)과 WebSockets를 기반으로 업비
 - 주문 생성 및 취소
 - 입출금 기능 지원
 - 기술적 분석 도구 제공
+- REST API v1 (`/api/v1/`) — 잔고·주문용 스크립트/봇 엔드포인트
+- WebSocket 게이트웨이 (`/ws/`) — public/private 실시간 스트림
 
 ## 시작하기 전에
 
@@ -46,7 +48,7 @@ UPBIT_BRIDGE_AUTH_TOKEN=your_bearer_token_here
 |------|------|------|
 | `UPBIT_ACCESS_KEY` | 선택 | 업비트 Access Key (계정·주문·입출금 API 용도) |
 | `UPBIT_SECRET_KEY` | 선택 | 업비트 Secret Key |
-| `UPBIT_BRIDGE_AUTH_TOKEN` | 권장 | SSE/WebSocket 엔드포인트 Bearer 인증 토큰. 설정하지 않으면 `/sse`, `/messages`, `/ws/` 경로가 보호되지 않습니다. |
+| `UPBIT_BRIDGE_AUTH_TOKEN` | 권장 | SSE/WebSocket/REST 엔드포인트 Bearer 인증 토큰. 설정하지 않으면 `/sse`, `/messages`, `/ws/`, `/api/v1` 경로가 보호되지 않습니다. |
 
 ### 2. Docker 이미지 실행
 
@@ -88,7 +90,18 @@ curl http://localhost:8000/health
 
 Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연동하고 활용하는 구체적인 방법은 [MCP 사용 가이드](docs/mcp_usage.md)를 참고해 주세요. (SSE 및 stdio 전송 방식 모두 지원)
 
-### 4. WebSocket 게이트웨이 (`/ws/`)
+### 4. REST API v1 (`/api/v1/`)
+
+잔고 조회와 주문 CRUD를 `curl`·스크립트에서 바로 호출할 수 있습니다. OpenAPI UI는 `/docs/api`입니다.
+
+```bash
+curl -H "Authorization: Bearer $UPBIT_BRIDGE_AUTH_TOKEN" \
+  http://localhost:8000/api/v1/accounts
+```
+
+상세 엔드포인트·예시는 [REST API 사용 가이드](docs/api_usage.md)를 참고해 주세요.
+
+### 5. WebSocket 게이트웨이 (`/ws/`)
 
 단일 `/ws/` 엔드포인트 하나로 업비트 public 시세(`ticker`, `trade`, `orderbook`, `candle.*`)와 private 계정 스트림(`myOrder`, `myAsset`)을 모두 받아볼 수 있습니다. 상세한 연결 방법과 구독 예시, 혼합 구독 및 에러 처리 방안은 [WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md)에서 확인하실 수 있습니다.
 
@@ -99,6 +112,7 @@ Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연동하�
 | [MCP 사용 가이드](docs/mcp_usage.md) | Claude Desktop 및 Cursor 연결 설정 (SSE, stdio) |
 | [MCP 도구 소개](docs/mcp-tools.md) | Tool, Resource, Prompt 목록 및 설명 |
 | [Upbit SDK ↔ MCP 구현 현황](docs/upbit-sdk-mcp-coverage.md) | SDK 대비 MCP 커버리지 체크리스트 |
+| [REST API 사용 가이드](docs/api_usage.md) | `/api/v1/` 잔고·주문, OpenAPI (`/docs/api`) |
 | [WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md) | `/ws/` 연결, 구독 예시, public/private 라우팅 |
 
 <details>

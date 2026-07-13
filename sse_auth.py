@@ -3,6 +3,14 @@
 import secrets
 
 import uvicorn
+from api.v1 import V1_ROUTES
+from api.v1.openapi import (
+    API_DOC_PATH,
+    API_DOC_SPEC_PATH,
+    API_PUBLIC_DOC_PATHS,
+    api_doc,
+    api_spec,
+)
 from events_docs import (
     EVENTS_DOC_PATH,
     EVENTS_DOC_SPEC_PATH,
@@ -16,6 +24,9 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route, WebSocketRoute
 
 from ws_gateway import handle_ws_gateway
+
+# Docs + health stay reachable without Bearer when auth is enabled.
+_PUBLIC_PATHS = frozenset({"/health", *PUBLIC_DOC_PATHS, *API_PUBLIC_DOC_PATHS})
 
 
 def verify_bearer(headers: list[tuple[bytes, bytes]], token: str) -> bool:
@@ -45,7 +56,7 @@ class BearerTokenMiddleware:
             return
 
         path = scope.get("path", "")
-        if path == "/health" or path in PUBLIC_DOC_PATHS:
+        if path in _PUBLIC_PATHS:
             await self.app(scope, receive, send)
             return
 
@@ -84,6 +95,9 @@ async def run_sse_async(mcp, token: str | None = None) -> None:
             Route("/health", endpoint=health),
             Route(EVENTS_DOC_PATH, endpoint=events_doc),
             Route(EVENTS_DOC_SPEC_PATH, endpoint=events_spec),
+            Route(API_DOC_PATH, endpoint=api_doc),
+            Route(API_DOC_SPEC_PATH, endpoint=api_spec),
+            *V1_ROUTES,
             Route("/sse", endpoint=handle_sse),
             Mount("/messages/", app=sse.handle_post_message),
             WebSocketRoute("/ws/", endpoint=handle_ws_gateway),
