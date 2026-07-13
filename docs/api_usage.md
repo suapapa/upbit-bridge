@@ -1,6 +1,6 @@
 # REST API v1 사용 가이드
 
-Upbit Bridge의 `/api/v1/` 엔드포인트는 잔고 조회·주문 생성/조회/취소처럼 **스크립트·크론·봇**에 맞는 요청-응답 REST API입니다. MCP(`/sse`)나 WebSocket(`/ws/`)과 같은 프로세스에서 함께 제공됩니다.
+Upbit Bridge의 `/api/v1/` 엔드포인트는 잔고·주문·공개 시세처럼 **스크립트·크론·봇**에 맞는 요청-응답 REST API입니다. MCP(`/sse`)나 WebSocket(`/ws/`)과 같은 프로세스에서 함께 제공됩니다.
 
 OpenAPI(Swagger UI): [http://localhost:8000/docs/api](http://localhost:8000/docs/api)  
 스펙 JSON: [http://localhost:8000/docs/api.json](http://localhost:8000/docs/api.json)
@@ -38,6 +38,18 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/accounts
 | `GET` | `/api/v1/orders/chance?market=` | 주문 가능 정보 |
 | `GET` | `/api/v1/orders/{uuid}` | 주문 상세 |
 | `DELETE` | `/api/v1/orders/{uuid}` | 단건 취소 |
+
+### 시세·마켓 (공개 데이터, Upbit 키 불필요)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| `GET` | `/api/v1/markets` | 거래 가능 마켓 목록 (`?details=true`) |
+| `GET` | `/api/v1/ticker?markets=` | 현재가 (복수 콤마 구분) |
+| `GET` | `/api/v1/orderbook?markets=` | 호가 (`?count=` 깊이) |
+| `GET` | `/api/v1/trades?market=` | 최근 체결 |
+| `GET` | `/api/v1/candles?market=&interval=` | 캔들 (`format=json\|csv`) |
+
+`UPBIT_BRIDGE_AUTH_TOKEN`이 설정된 경우 시세 API도 Bearer가 필요합니다. Upbit API 키는 계정·주문에만 필요합니다.
 
 ## 예시
 
@@ -83,6 +95,22 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
   "http://localhost:8000/api/v1/orders?cancel_side=all&count=20" | jq .
 ```
 
+### 시세 조회
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/ticker?markets=KRW-BTC,KRW-ETH" | jq .
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/orderbook?market=KRW-BTC&count=5" | jq .
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/candles?market=KRW-BTC&interval=minute60&count=24" | jq .
+
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8000/api/v1/candles?market=KRW-BTC&interval=day&count=30&format=csv"
+```
+
 ## 오류 형식
 
 ```json
@@ -98,7 +126,7 @@ curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
 
 | 채널 | 적합한 일 |
 |------|-----------|
-| REST `/api/v1/` | 잔고, 주문 CRUD, 스크립트·봇 |
+| REST `/api/v1/` | 잔고, 주문 CRUD, 시세 스냅샷, 스크립트·봇 |
 | MCP `/sse` | 에이전트 도구·분석·프롬프트 |
 | WS `/ws/` | 실시간 ticker / myOrder / myAsset |
 

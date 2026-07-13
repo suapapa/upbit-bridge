@@ -9,7 +9,7 @@ Upbit Bridge는 Model Context Protocol(MCP), REST API, WebSockets를 기반으�
 - 주문 생성 및 취소
 - 입출금 기능 지원
 - 기술적 분석 도구 제공
-- REST API v1 (`/api/v1/`) — 잔고·주문용 스크립트/봇 엔드포인트
+- REST API v1 (`/api/v1/`) — 잔고·주문·시세용 스크립트/봇 엔드포인트
 - WebSocket 게이트웨이 (`/ws/`) — public/private 실시간 스트림
 
 ## 시작하기 전에
@@ -92,7 +92,7 @@ Claude Desktop, Cursor 등 MCP 클라이언트에서 Upbit Bridge를 연동하�
 
 ### 4. REST API v1 (`/api/v1/`)
 
-잔고 조회와 주문 CRUD를 `curl`·스크립트에서 바로 호출할 수 있습니다. OpenAPI UI는 `/docs/api`입니다.
+잔고·주문 CRUD와 공개 시세(ticker, orderbook, candles 등)를 `curl`·스크립트에서 바로 호출할 수 있습니다. OpenAPI UI는 `/docs/api`입니다.
 
 ```bash
 curl -H "Authorization: Bearer $UPBIT_BRIDGE_AUTH_TOKEN" \
@@ -112,7 +112,7 @@ curl -H "Authorization: Bearer $UPBIT_BRIDGE_AUTH_TOKEN" \
 | [MCP 사용 가이드](docs/mcp_usage.md) | Claude Desktop 및 Cursor 연결 설정 (SSE, stdio) |
 | [MCP 도구 소개](docs/mcp-tools.md) | Tool, Resource, Prompt 목록 및 설명 |
 | [Upbit SDK ↔ MCP 구현 현황](docs/upbit-sdk-mcp-coverage.md) | SDK 대비 MCP 커버리지 체크리스트 |
-| [REST API 사용 가이드](docs/api_usage.md) | `/api/v1/` 잔고·주문, OpenAPI (`/docs/api`) |
+| [REST API 사용 가이드](docs/api_usage.md) | `/api/v1/` 잔고·주문·시세, OpenAPI (`/docs/api`) |
 | [WebSocket 게이트웨이 사용 가이드](docs/ws_usage.md) | `/ws/` 연결, 구독 예시, public/private 라우팅 |
 
 <details>

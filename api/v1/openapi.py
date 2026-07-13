@@ -10,11 +10,11 @@ OPENAPI_SPEC: dict = {
     "openapi": "3.0.3",
     "info": {
         "title": "Upbit Bridge REST API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "description": (
-            "Script-friendly REST endpoints for account balances and order management. "
+            "Script-friendly REST endpoints for account balances, orders, and public market data. "
             "Requires `Authorization: Bearer <UPBIT_BRIDGE_AUTH_TOKEN>` when the token is set. "
-            "Upbit API keys stay on the server."
+            "Upbit API keys stay on the server (only needed for Accounts/Orders)."
         ),
     },
     "servers": [{"url": "http://localhost:8000", "description": "Local development server"}],
@@ -365,6 +365,207 @@ OPENAPI_SPEC: dict = {
                     }
                 },
             },
+        },
+        "/api/v1/markets": {
+            "get": {
+                "summary": "List trading markets",
+                "operationId": "listMarkets",
+                "tags": ["Market"],
+                "parameters": [
+                    {
+                        "name": "details",
+                        "in": "query",
+                        "schema": {"type": "boolean", "default": False},
+                        "description": "Include market detail fields when true",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Market list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"type": "object", "additionalProperties": True},
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/v1/ticker": {
+            "get": {
+                "summary": "Get ticker snapshot(s)",
+                "operationId": "getTicker",
+                "tags": ["Market"],
+                "parameters": [
+                    {
+                        "name": "markets",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string", "example": "KRW-BTC,KRW-ETH"},
+                        "description": "Comma-separated markets (alias: market)",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticker list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"type": "object", "additionalProperties": True},
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/v1/orderbook": {
+            "get": {
+                "summary": "Get orderbook snapshot(s)",
+                "operationId": "getOrderbook",
+                "tags": ["Market"],
+                "parameters": [
+                    {
+                        "name": "markets",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string", "example": "KRW-BTC"},
+                        "description": "Comma-separated markets (alias: market)",
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {"type": "integer", "minimum": 1, "maximum": 30},
+                        "description": "Orderbook depth per side",
+                    },
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Orderbook list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"type": "object", "additionalProperties": True},
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/v1/trades": {
+            "get": {
+                "summary": "Get recent trades",
+                "operationId": "getTrades",
+                "tags": ["Market"],
+                "parameters": [
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string", "example": "KRW-BTC"},
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {"type": "integer", "minimum": 1, "maximum": 500},
+                    },
+                    {"name": "cursor", "in": "query", "schema": {"type": "string"}},
+                    {"name": "to", "in": "query", "schema": {"type": "string"}},
+                    {"name": "days_ago", "in": "query", "schema": {"type": "integer"}},
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Trade list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"type": "object", "additionalProperties": True},
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/v1/candles": {
+            "get": {
+                "summary": "Get candle data",
+                "operationId": "getCandles",
+                "tags": ["Market"],
+                "parameters": [
+                    {
+                        "name": "market",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string", "example": "KRW-BTC"},
+                    },
+                    {
+                        "name": "interval",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "second",
+                                "minute1",
+                                "minute3",
+                                "minute5",
+                                "minute10",
+                                "minute15",
+                                "minute30",
+                                "minute60",
+                                "minute240",
+                                "day",
+                                "week",
+                                "month",
+                                "year",
+                            ],
+                            "default": "minute1",
+                        },
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200,
+                            "default": 200,
+                        },
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {"type": "string"},
+                        "description": "Last candle time (ISO or yyyy-MM-dd HH:mm:ss)",
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "schema": {"type": "string", "enum": ["json", "csv"], "default": "json"},
+                    },
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Candle list (JSON) or CSV text",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {"type": "object", "additionalProperties": True},
+                                }
+                            },
+                            "text/csv": {"schema": {"type": "string"}},
+                        },
+                    }
+                },
+            }
         },
     },
 }
